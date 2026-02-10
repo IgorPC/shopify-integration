@@ -6,8 +6,8 @@ use App\Http\DTOs\ProductDTO;
 
 class CreateOrUpdateProductResponseDTO
 {
-    protected string $message;
-    protected ProductDTO | null $product;
+    public string $message;
+    public ProductDTO | null $product;
 
     public function __construct(string $message, ProductDTO | null $product) {
         $this->message = $message;

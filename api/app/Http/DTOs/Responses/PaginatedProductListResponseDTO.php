@@ -4,13 +4,13 @@ namespace App\Http\DTOs\Responses;
 
 class PaginatedProductListResponseDTO
 {
-    protected array $products;
-    protected int $currentPage;
-    protected int $totalPages;
-    protected int $perPage;
-    protected int $totalProducts;
-    protected bool $hasNextPage;
-    protected bool $hasPreviousPage;
+    public array $products;
+    public int $currentPage;
+    public int $totalPages;
+    public int $perPage;
+    public int $totalProducts;
+    public bool $hasNextPage;
+    public bool $hasPreviousPage;
 
     public function __construct(array $products, int $currentPage, int $totalPages, int $totalProducts, int $perPage) {
         $this->products = $products;

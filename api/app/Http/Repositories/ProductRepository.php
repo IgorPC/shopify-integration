@@ -37,9 +37,9 @@ class ProductRepository
         return $this->product->whereNotIn('shopify_id', $productIds)->get();
     }
 
-    public function productExists(string $productIds): bool
+    public function productExists(string $productId): bool
     {
-        return $this->product->where(['shopify_id', $productIds])->count();
+        return $this->product->where(['shopify_id' => $productId])->count();
     }
 
     public function deleteProductById(string $productId): void

@@ -57,8 +57,8 @@ class ProductService
     public function createProduct(string $title, float $price, string $description, int $quantity): CreateOrUpdateProductResponseDTO
     {
         try {
-            if (! $title) {
-                throw new \Exception("Title is required");
+            if (! $title || strlen(trim($title)) <= 5) {
+                throw new \Exception("Title is required or invalid");
             }
 
             if ($price < 0) {
@@ -151,8 +151,8 @@ class ProductService
                 return new CreateOrUpdateProductResponseDTO("Product does not exist in shopify", null);
             }
 
-            if (! $title) {
-                throw new \Exception("Product title is required");
+            if (! $title || strlen(trim($title)) <= 5) {
+                throw new \Exception("Title is required or invalid");
             }
 
             if ($price < 0) {
