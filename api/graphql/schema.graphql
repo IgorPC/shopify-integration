@@ -1,41 +1,103 @@
-"A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
-scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
-
-"Indicates what fields are available at the top level of a query operation."
 type Query {
-    "Find a single user by an identifying attribute."
-    user(
-      "Search by primary key."
-      id: ID @eq @rules(apply: ["prohibits:email", "required_without:email"])
+    "List all products using ProductService"
+    allProducts(
+        perPage: Int = 10
+        page: Int = 1
+    ): PaginatedProducts @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@all")
 
-      "Search by email address."
-      email: String @eq @rules(apply: ["prohibits:id", "required_without:id", "email"])
-    ): User @find
+    "Get a single product using ProductService"
+    product(id: String!): Product @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@find")
 
-    "List multiple users."
-    users(
-      "Filters by name. Accepts SQL LIKE wildcards `%` and `_`."
-      name: String @where(operator: "like")
-    ): [User!]! @paginate(defaultCount: 10)
+    "Sync All Products from shopify to the DB using ProductService"
+    syncAll: SyncResponse @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@syncAll")
+
+    "Sync a product by id from shopify to the DB using ProductService"
+    syncOne(id: String!): SyncResponse @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@syncOne")
+
+    "Sync a product from the DB to Shopify using ProductService"
+    syncOneFromLocal(id: String!): CreatedOrUpdatedResponse @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@syncLocalProductToShopify")
 }
 
-"Account of a person who uses this application."
-type User {
-    "Unique primary key."
+type Mutation {
+    "Sync many products from the DB to Shopify using ProductService"
+    bulkSyncToShopify(productIds: [String!]!): BulkSyncResponse
+    @field(resolver: "App\\GraphQL\\Mutations\\ProductMutation@bulkSync")
+
+    "Delete a product completely from shopify and DB"
+    deleteProduct(id: String!): DeleteResponse
+    @field(resolver: "App\\GraphQL\\Mutations\\ProductMutation@deleteProduct")
+
+    "Delete a product from DB"
+    deleteLocalProduct(id: String!): DeleteResponse
+    @field(resolver: "App\\GraphQL\\Mutations\\ProductMutation@deleteLocalProduct")
+
+    "Create a new product"
+    createProduct(input: CreateProductInput! @spread): CreatedOrUpdatedResponse
+    @field(resolver: "App\\GraphQL\\Mutations\\ProductMutation@create")
+
+    "Update a product by id"
+    updateProduct(input: UpdateProductInput! @spread): CreatedOrUpdatedResponse
+    @field(resolver: "App\\GraphQL\\Mutations\\ProductMutation@update")
+}
+
+"Mapped response for object ProductDTO"
+type Product {
     id: ID!
+    title: String!
+    description: String!
+    price: Float!
+    inventoryQuantity: Int!
+}
 
-    "Non-unique name."
-    name: String!
+"Mapped response object for PaginatedProductListResponseDTO"
+type PaginatedProducts {
+    products: [Product!]!
+    currentPage: Int!
+    totalPages: Int!
+    perPage: Int!
+    totalProducts: Int!
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+}
 
-    "Unique email address."
-    email: String!
+"Mapped response object for SyncProductResponseDTO"
+type SyncResponse {
+    message: String!
+    syncCount: Int!
+    missingProducts: [Product!]!
+}
 
-    "When the email was verified."
-    email_verified_at: DateTime
+"Mapped response object for CreateOrUpdateProductResponseDTO"
+type CreatedOrUpdatedResponse {
+    message: String!
+    product: Product
+}
 
-    "When the account was created."
-    created_at: DateTime!
+"Mapped response object for SyncProductResponseDTO adapted for bulk sync"
+type BulkSyncResponse {
+    message: String!
+    syncCount: Int!
+    failedIds: [String]
+}
 
-    "When the account was last updated."
-    updated_at: DateTime!
+"Mapped response deleting Products"
+type DeleteResponse {
+    status: Boolean!
+    message: String
+}
+
+"Mapped input from Create Product"
+input CreateProductInput {
+    title: String!
+    price: Float!
+    description: String!
+    quantity: Int!
+}
+
+"Mapped input from Update Product"
+input UpdateProductInput {
+    id: String!
+    title: String!
+    price: Float!
+    description: String!
 }

@@ -22,7 +22,6 @@ class ProductService
     public function __construct(
         ProductRepository $productRepository,
         ShopifyService $shopifyService,
-        SystemLogService $systemLogService
     ) {
         $this->productRepository = $productRepository;
         $this->shopifyService = $shopifyService;
@@ -86,7 +85,8 @@ class ProductService
                 $exception->getFile(),
                 $exception->getLine()
             ]);
-            throw new \Exception("Error while creating product $title");
+
+            throw new \Exception($exception->getMessage());
         }
     }
 
@@ -137,7 +137,8 @@ class ProductService
                 $exception->getFile(),
                 $exception->getLine()
             ]);
-            throw new \Exception("Error while deleting product $productId");
+
+            throw new \Exception($exception->getMessage());
         }
     }
 
@@ -176,7 +177,8 @@ class ProductService
                 $exception->getFile(),
                 $exception->getLine()
             ]);
-            throw new \Exception("Error while updating product $productId");
+
+            throw new \Exception($exception->getMessage());
         }
     }
 
@@ -252,7 +254,7 @@ class ProductService
                 $exception->getLine()
             ]);
 
-            throw new \Exception("Error while syncing product $productId");
+            throw new \Exception($exception->getMessage());
         }
     }
 
@@ -281,7 +283,8 @@ class ProductService
                 $exception->getFile(),
                 $exception->getLine()
             ]);
-            throw new \Exception("Error to sync the product $productId from shopify");
+
+            throw new \Exception($exception->getMessage());
         }
     }
 
@@ -339,7 +342,8 @@ class ProductService
                 $exception->getFile(),
                 $exception->getLine()
             ]);
-            throw new \Exception("Error to sync the products from shopify");
+
+            throw new \Exception($exception->getMessage());
         }
     }
 }
