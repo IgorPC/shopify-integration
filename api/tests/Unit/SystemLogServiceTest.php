@@ -2,6 +2,10 @@
 
 namespace Tests\Unit;
 
+use App\Http\DTOs\Responses\PaginatedResponseDTO;
+use App\Http\DTOs\SystemLogDTO;
+use App\Models\SystemLog;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Tests\TestCase;
 use App\Http\Services\SystemLogService;
 use App\Http\Repositories\SystemLogRepository;
@@ -49,5 +53,62 @@ class SystemLogServiceTest extends TestCase
         $this->systemLogService->persist($dto);
 
         $this->assertTrue(true);
+    }
+
+    /**
+     * Test the pagination method with correct types.
+     */
+    public function test_get_system_log_paginated_returns_correct_structure(): void
+    {
+        $perPage = 5;
+        $currentPage = 1;
+
+        $logModel = new SystemLog([
+            'action' => LogActionEnum::CREATE->value,
+            'type' => LogTypeEnum::PRODUCT->value,
+            'identifier' => '123',
+            'payload' => 'Test Log',
+            'status' => true,
+        ]);
+        $logModel->created_at = now();
+
+        $paginatorMock = Mockery::mock(LengthAwarePaginator::class);
+        $paginatorMock->shouldReceive('getCollection')->once()->andReturn(collect([$logModel]));
+        $paginatorMock->shouldReceive('currentPage')->andReturn($currentPage);
+        $paginatorMock->shouldReceive('lastPage')->andReturn(1);
+        $paginatorMock->shouldReceive('total')->andReturn(1);
+
+        $this->repositoryMock
+            ->shouldReceive('getSystemLogPaginated')
+            ->once()
+            ->with($perPage, $currentPage)
+            ->andReturn($paginatorMock);
+
+        $result = $this->systemLogService->getSystemLogPaginated($perPage, $currentPage);
+
+        $this->assertInstanceOf(PaginatedResponseDTO::class, $result);
+        $this->assertCount(1, $result->items);
+        $this->assertInstanceOf(SystemLogDTO::class, $result->items[0]);
+    }
+
+    /**
+     * Test pagination with empty results.
+     */
+    public function test_get_system_log_paginated_handles_empty_results(): void
+    {
+        $paginatorMock = Mockery::mock(LengthAwarePaginator::class);
+        $paginatorMock->shouldReceive('getCollection')->andReturn(collect([]));
+        $paginatorMock->shouldReceive('currentPage')->andReturn(1);
+        $paginatorMock->shouldReceive('lastPage')->andReturn(0);
+        $paginatorMock->shouldReceive('total')->andReturn(0);
+
+        $this->repositoryMock
+            ->shouldReceive('getSystemLogPaginated')
+            ->andReturn($paginatorMock);
+
+        $result = $this->systemLogService->getSystemLogPaginated();
+
+        $this->assertEmpty($result->items);
+        $this->assertEquals(0, $result->total);
     }
 }

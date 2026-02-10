@@ -2,22 +2,22 @@
 
 namespace App\Http\DTOs\Responses;
 
-class PaginatedProductListResponseDTO
+class PaginatedResponseDTO
 {
-    public array $products;
+    public array $items;
     public int $currentPage;
     public int $totalPages;
     public int $perPage;
-    public int $totalProducts;
+    public int $total;
     public bool $hasNextPage;
     public bool $hasPreviousPage;
 
-    public function __construct(array $products, int $currentPage, int $totalPages, int $totalProducts, int $perPage) {
-        $this->products = $products;
+    public function __construct(array $items, int $currentPage, int $totalPages, int $total, int $perPage) {
+        $this->items = $items;
         $this->currentPage = $currentPage;
         $this->totalPages = $totalPages;
         $this->perPage = $perPage;
-        $this->totalProducts = $totalProducts;
+        $this->total = $total;
         $this->hasNextPage = $this->currentPage < $this->totalPages;
         $this->hasPreviousPage = $this->currentPage > 1;
     }

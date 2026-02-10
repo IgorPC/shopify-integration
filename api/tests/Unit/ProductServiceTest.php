@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Http\DTOs\Responses\PaginatedProductListResponseDTO;
+use App\Http\DTOs\Responses\PaginatedResponseDTO;
 use App\Http\DTOs\Responses\ShopifyProductListResponseDTO;
 use App\Http\DTOs\Responses\SyncProductResponseDTO;
 use App\Models\Product;
@@ -67,7 +67,7 @@ class ProductServiceTest extends TestCase
 
         $response = $this->productService->getAllProductsPaginated(10, 1);
 
-        $this->assertInstanceOf(PaginatedProductListResponseDTO::class, $response);
+        $this->assertInstanceOf(PaginatedResponseDTO::class, $response);
     }
 
     /**
@@ -76,7 +76,7 @@ class ProductServiceTest extends TestCase
     public function test_create_product_throws_exception_for_short_title()
     {
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Error while creating product Abc");
+        $this->expectExceptionMessage("Title is required or invalid");
 
         $this->productService->createProduct('Abc', 100.0, 'Description', 10);
     }

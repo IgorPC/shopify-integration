@@ -5,6 +5,12 @@ type Query {
         page: Int = 1
     ): PaginatedProducts @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@all")
 
+    "List all logs using SystemLogService"
+    allLogs(
+        perPage: Int = 10
+        page: Int = 1
+    ): PaginatedLogs @field(resolver: "App\\GraphQL\\Queries\\SystemLogQuery@all")
+
     "Get a single product using ProductService"
     product(id: String!): Product @field(resolver: "App\\GraphQL\\Queries\\ProductQuery@find")
 
@@ -49,13 +55,33 @@ type Product {
     inventoryQuantity: Int!
 }
 
-"Mapped response object for PaginatedProductListResponseDTO"
+"Mapped response object for PaginatedResponseDTO adapted for Products"
 type PaginatedProducts {
-    products: [Product!]!
+    items: [Product!]!
     currentPage: Int!
     totalPages: Int!
     perPage: Int!
-    totalProducts: Int!
+    total: Int!
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+}
+
+"Mapped response for object SystemLogDTO"
+type SystemLog {
+    action: String!
+    target: String
+    payload: String!
+    status: Boolean!
+    created_at: String!
+}
+
+"Mapped response object for PaginatedResponseDTO adapted for SystemLog"
+type PaginatedLogs {
+    items: [SystemLog!]!
+    currentPage: Int!
+    totalPages: Int!
+    perPage: Int!
+    total: Int!
     hasNextPage: Boolean!
     hasPreviousPage: Boolean!
 }

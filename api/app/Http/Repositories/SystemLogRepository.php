@@ -4,6 +4,7 @@ namespace App\Http\Repositories;
 
 use App\Http\DTOs\PersistLogDTO;
 use App\Models\SystemLog;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class SystemLogRepository
 {
@@ -22,5 +23,25 @@ class SystemLogRepository
             'payload' => $persistLogDTO->payload,
             'status' => $persistLogDTO->status,
         ]);
+    }
+
+    public function getSystemLogPaginated(int $perPage = 10, int $currentPage = 1): LengthAwarePaginator
+    {
+        return $this->systemLog
+            ->select([
+                'action',
+                'type',
+                'target',
+                'payload',
+                'status',
+                'created_at'
+            ])
+            ->orderBy('created_at', 'asc')
+            ->paginate(
+                $perPage,
+                ['*'],
+                'page',
+                $currentPage,
+            );
     }
 }

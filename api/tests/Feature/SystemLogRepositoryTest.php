@@ -57,4 +57,89 @@ class SystemLogRepositoryTest extends TestCase
         $this->expectException(\TypeError::class);
         $this->repository->persistLog(null);
     }
+
+    /**
+     * Verifies if it returns pagination structure and count.
+     */
+    public function test_it_returns_paginated_logs(): void
+    {
+        SystemLog::create([
+            'action' => 'create',
+            'type' => 'product',
+            'target' => 'id-1',
+            'payload' => 'Payload 1',
+            'status' => true,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        SystemLog::create([
+            'action' => 'update',
+            'type' => 'product',
+            'target' => 'id-2',
+            'payload' => 'Payload 2',
+            'status' => true,
+            'created_at' => now(),
+        ]);
+
+
+        $paginated = $this->repository->getSystemLogPaginated(1, 1);
+
+        $this->assertCount(1, $paginated->items());
+        $this->assertEquals(2, $paginated->total());
+        $this->assertEquals(1, $paginated->currentPage());
+        $this->assertEquals('create', $paginated->items()[0]->action);
+    }
+
+    /**
+     * getSystemLogPaginated ordering: Must be ASC by created_at.
+     */
+    public function test_it_returns_logs_ordered_by_created_at_asc(): void
+    {
+        SystemLog::create([
+            'action' => 'new',
+            'type' => 'product',
+            'payload' => 'new',
+            'status' => true,
+            'created_at' => now(),
+        ]);
+
+        SystemLog::create([
+            'action' => 'old',
+            'type' => 'product',
+            'payload' => 'old',
+            'status' => true,
+            'created_at' => now()->subDays(2),
+        ]);
+
+        $paginated = $this->repository->getSystemLogPaginated(10, 1);
+        $items = $paginated->items();
+        
+        $this->assertEquals('new', $items[0]->action);
+        $this->assertEquals('old', $items[1]->action);
+    }
+
+    /**
+     * Test field selection: Ensures only the requested fields are in the result.
+     */
+    public function test_it_returns_only_selected_fields(): void
+    {
+        SystemLog::create([
+            'action' => 'create',
+            'type' => 'product',
+            'payload' => 'test',
+            'status' => true,
+        ]);
+
+        $paginated = $this->repository->getSystemLogPaginated(1, 1);
+        $log = $paginated->items()[0];
+
+        $attributes = $log->getAttributes();
+
+        $this->assertArrayHasKey('action', $attributes);
+        $this->assertArrayHasKey('type', $attributes);
+        $this->assertArrayHasKey('payload', $attributes);
+        $this->assertArrayHasKey('status', $attributes);
+        $this->assertArrayHasKey('created_at', $attributes);
+        $this->assertArrayNotHasKey('id', $attributes);
+    }
 }

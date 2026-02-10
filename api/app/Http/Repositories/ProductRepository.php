@@ -62,7 +62,7 @@ class ProductRepository
                 'price',
                 'inventory_quantity'
             ])
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->paginate(
                 $perPage,
                 ['*'],

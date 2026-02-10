@@ -5,7 +5,7 @@ namespace App\Http\Services;
 use App\Http\DTOs\PersistLogDTO;
 use App\Http\DTOs\ProductDTO;
 use App\Http\DTOs\Responses\CreateOrUpdateProductResponseDTO;
-use App\Http\DTOs\Responses\PaginatedProductListResponseDTO;
+use App\Http\DTOs\Responses\PaginatedResponseDTO;
 use App\Http\DTOs\Responses\SyncProductResponseDTO;
 use App\Http\Enums\LogTypeEnum;
 use App\Http\Enums\LogActionEnum;
@@ -31,7 +31,7 @@ class ProductService
     {
         $products = $this->productRepository->getProductsWithPagination($perPage, $currentPage);
 
-        return new PaginatedProductListResponseDTO(
+        return new PaginatedResponseDTO(
             $products->getCollection()->transform(function ($product) {
                 return ProductDTO::fromModel($product);
             })->toArray(),
