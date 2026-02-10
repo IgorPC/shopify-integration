@@ -10,6 +10,7 @@ use App\Http\DTOs\Responses\SyncProductResponseDTO;
 use App\Http\Enums\LogTypeEnum;
 use App\Http\Enums\LogActionEnum;
 use App\Http\Repositories\ProductRepository;
+use App\Jobs\PersistLogJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +18,6 @@ class ProductService
 {
     private ProductRepository $productRepository;
     private ShopifyService $shopifyService;
-    private SystemLogService $systemLogService;
 
     public function __construct(
         ProductRepository $productRepository,
@@ -26,7 +26,6 @@ class ProductService
     ) {
         $this->productRepository = $productRepository;
         $this->shopifyService = $shopifyService;
-        $this->systemLogService = $systemLogService;
     }
 
     public function getAllProductsPaginated(int $perPage = 10, int $currentPage = 1)
@@ -73,6 +72,13 @@ class ProductService
             $newProduct = $this->shopifyService->createProduct($title, $price, $description, $quantity);
             $this->syncProductById($newProduct->id);
 
+            PersistLogJob::dispatch(new PersistLogDTO(
+                LogActionEnum::CREATE,
+                LogTypeEnum::PRODUCT,
+                $newProduct->id,
+                "Product successfully created",
+            ));
+
             return new CreateOrUpdateProductResponseDTO("Product successfully created", $newProduct);
         } catch (\Exception $exception) {
             Log::error("Error while creating product $title", [
@@ -92,6 +98,13 @@ class ProductService
 
         $this->productRepository->deleteProductById($productId);
 
+        PersistLogJob::dispatch(new PersistLogDTO(
+            LogActionEnum::DELETE,
+            LogTypeEnum::PRODUCT,
+            $productId,
+            "Product successfully deleted",
+        ));
+
         return true;
     }
 
@@ -109,6 +122,13 @@ class ProductService
             if ($this->productRepository->productExists($productId)) {
                 $this->productRepository->deleteProductById($productId);
             }
+
+            PersistLogJob::dispatch(new PersistLogDTO(
+                LogActionEnum::DELETE,
+                LogTypeEnum::PRODUCT,
+                $productId,
+                "Product successfully deleted",
+            ));
 
             return true;
         } catch (\Exception $exception) {
@@ -142,6 +162,13 @@ class ProductService
             $updatedProduct = $this->shopifyService->updateProductById($productId, $title, $description, $price);
             $this->syncProductById($productId);
 
+            PersistLogJob::dispatch(new PersistLogDTO(
+                LogActionEnum::UPDATE,
+                LogTypeEnum::PRODUCT,
+                $productId,
+                "Product successfully updated",
+            ));
+
             return new CreateOrUpdateProductResponseDTO("Product successfully updated", $updatedProduct);
         } catch (\Exception $exception) {
             Log::error("Error while updating product $productId", [
@@ -153,23 +180,21 @@ class ProductService
         }
     }
 
-    public function bulkSyncLocalProductToShopify(array $productIds, int $chunkSize = 50): SyncProductResponseDTO
+    public function bulkSyncLocalProductToShopify(array $productIds): SyncProductResponseDTO
     {
         $syncedCount = 0;
         $failedIds = [];
 
-        $chunks = collect($productIds)->chunk($chunkSize);
+        $limitedIds = array_slice($productIds, 0, 10);
 
-        foreach ($chunks as $chunk) {
-            foreach ($chunk as $productId) {
-                try {
-                    $this->syncLocalProductToShopify($productId);
-                    $syncedCount++;
-                } catch (\Exception $exception) {
-                    Log::error("Bulk Sync Failure for ID $productId: " . $exception->getMessage());
-                    $failedIds[] = $productId;
-                    continue;
-                }
+        foreach ($limitedIds as $productId) {
+            try {
+                $this->syncLocalProductToShopify($productId);
+                $syncedCount++;
+            } catch (\Exception $exception) {
+                Log::error("Bulk Sync Failure for ID $productId: " . $exception->getMessage());
+                $failedIds[] = $productId;
+                continue;
             }
         }
 
@@ -210,6 +235,13 @@ class ProductService
 
             DB::commit();
 
+            PersistLogJob::dispatch(new PersistLogDTO(
+                LogActionEnum::SYNC,
+                LogTypeEnum::PRODUCT,
+                $productId,
+                "Product successfully synced",
+            ));
+
             return new CreateOrUpdateProductResponseDTO("Product successfully created", $shopifyProduct);
         } catch (\Exception $exception) {
             DB::rollBack();
@@ -235,7 +267,7 @@ class ProductService
 
             $this->productRepository->syncProductFromShopify($shopifyProduct);
 
-            $this->systemLogService->persist(new PersistLogDTO(
+            PersistLogJob::dispatch(new PersistLogDTO(
                 LogActionEnum::SYNC,
                 LogTypeEnum::PRODUCT,
                 $productId,
@@ -287,7 +319,7 @@ class ProductService
                 ? $missingShopifyProducts->map(fn($p) => ProductDTO::fromModel($p))->toArray()
                 : [];
 
-            $this->systemLogService->persist(new PersistLogDTO(
+            PersistLogJob::dispatch(new PersistLogDTO(
                 LogActionEnum::SYNC,
                 LogTypeEnum::SYSTEM,
                 null,

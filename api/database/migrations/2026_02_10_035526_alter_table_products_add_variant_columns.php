@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('products', function (Blueprint $table) {
             $table->string('variant_id')->after('inventory_quantity');
-            $table->string('inventory_item_id')->after('variantId');
+            $table->string('inventory_item_id')->after('variant_id');
         });
     }
 
