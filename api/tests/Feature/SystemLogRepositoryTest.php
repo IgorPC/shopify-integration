@@ -113,7 +113,7 @@ class SystemLogRepositoryTest extends TestCase
 
         $paginated = $this->repository->getSystemLogPaginated(10, 1);
         $items = $paginated->items();
-        
+
         $this->assertEquals('new', $items[0]->action);
         $this->assertEquals('old', $items[1]->action);
     }

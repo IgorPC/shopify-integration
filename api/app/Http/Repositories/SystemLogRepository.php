@@ -36,7 +36,7 @@ class SystemLogRepository
                 'status',
                 'created_at'
             ])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc')
             ->paginate(
                 $perPage,
                 ['*'],
