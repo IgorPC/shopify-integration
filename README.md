@@ -66,6 +66,7 @@ one for the api (shopify_api) and another for the web application (shopify_web).
 - Implement feature to add and manage images for a product
 - Filters for Product and System Log
 - Improve feedback when an action is done and we go back to the Listing.
+- Implement webhooks using the api routes from Laravel
 
 ## Known issues and bugs:
 - After updating an item, quantity is always updated to zero on Shopify and because I sync after every update, it's also zero in the local Database
