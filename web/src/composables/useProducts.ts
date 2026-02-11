@@ -9,6 +9,7 @@ import {
 } from '../graphql/products';
 import {computed, type Ref} from 'vue';
 import type {MissingProduct, PaginatedProducts, Product, SyncAllResponse} from "../types/product.ts";
+import { useApolloClient } from '@vue/apollo-composable';
 
 export function getAllProducts(perPage: Ref<number> | number = 10, page: Ref<number> | number = 1) {
     const { result, loading, error, refetch } = useQuery<{ allProducts: PaginatedProducts }>(
@@ -166,12 +167,14 @@ export function syncProduct() {
 }
 
 export function syncAll() {
+    const { client } = useApolloClient();
     const { load, loading, error, refetch } = useLazyQuery<SyncAllResponse>(
         SYNC_ALL_PRODUCTS,
         {},
         {
             fetchPolicy: 'no-cache',
-            nextFetchPolicy: 'network-only'
+            nextFetchPolicy: 'network-only',
+            refetchQueries: ['GetProducts']
         }
     );
 
@@ -186,6 +189,10 @@ export function syncAll() {
                 const refetched = await refetch();
                 data = refetched?.data?.syncAll?.missingProducts ?? [];
             }
+
+            await client.refetchQueries({
+                include: ["GetProducts"],
+            });
 
             return { missingProducts: data ?? [] };
         } catch (err) {

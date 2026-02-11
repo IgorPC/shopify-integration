@@ -121,7 +121,10 @@
             </ul>
           </div>
           <div v-else>
-            <p>Everything is ok</p>
+            <div class="alert alert-success" role="alert">
+              <h4 class="alert-heading">Well done!</h4>
+              <p>Your Shopify store is synced with the local database.</p>
+            </div>
           </div>
         </div>
         <div class="modal-footer">
